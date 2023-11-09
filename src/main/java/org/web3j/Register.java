@@ -1,18 +1,13 @@
 package org.web3j;
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.time.Instant;
+import java.security.*;
 
-import org.bitcoinj.base.Base58;
 import org.json.JSONObject;
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.ECKeyPair;
-import org.web3j.crypto.Keys;
-import org.web3j.crypto.Sign;
+import org.web3j.crypto.*;
 
+import net.i2p.crypto.eddsa.KeyPairGenerator;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -74,23 +69,17 @@ public class Register {
       return registerObj.getJSONObject("data").getString("account_id");
    }
 
-   public String addAccessKey()
+   public KeyPair addAccessKey()
          throws IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
-      ECKeyPair key = Keys.createEcKeyPair();
-      System.out.println(key.getPublicKey().toByteArray().length);
-      System.out.println(key.getPrivateKey().toByteArray().length);
-      // I know this doesn't make sense. You should normally send the public key
-      // base58 encoded, but for some reason the private key has (almost always) 32
-      // bytes and the public key has 64 bytes, if generated with Web3J even though it
-      // should be the other way around.
-      String orderlyKey = "ed25519:" + Base58.encode(key.getPrivateKey().toByteArray());
-      // System.out.println(orderlyKey);
+      KeyPairGenerator keyGen = new KeyPairGenerator();
+      KeyPair keyPair = keyGen.generateKeyPair();
+      String orderlyKey = Util.encodePublicKey(keyPair);
 
       JSONObject addKeyMessage = new JSONObject();
       long timestamp = Instant.now().toEpochMilli();
       addKeyMessage.put("brokerId", Config.BROKER_ID);
       addKeyMessage.put("chainId", Config.CHAIN_ID);
-      addKeyMessage.put("scope", "trading");
+      addKeyMessage.put("scope", "read,trading");
       addKeyMessage.put("orderlyKey", orderlyKey);
       addKeyMessage.put("timestamp", timestamp);
       addKeyMessage.put("expiration", timestamp + 1_000 * 60 * 60 * 24 * 365); // 1 year
@@ -118,8 +107,7 @@ public class Register {
          addKeyRes = response.body().string();
       }
       System.out.println("orderly_key response: " + addKeyRes);
-      JSONObject addKeyObj = new JSONObject(addKeyRes);
 
-      return addKeyObj.getJSONObject("data").getString("orderly_key");
+      return keyPair;
    }
 }

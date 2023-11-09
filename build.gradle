@@ -69,6 +69,7 @@ dependencies {
     implementation 'org.netbeans.external:org-apache-commons-codec:RELEASE190'
     implementation 'org.json:json:20231013'
     implementation 'org.bitcoinj:bitcoinj-core:0.17-alpha2'
+    implementation 'net.i2p.crypto:eddsa:0.3.0'
 }
 
 jar {

@@ -10,6 +10,8 @@ import okhttp3.Response;
 import org.apache.commons.codec.binary.Hex;
 import org.json.JSONObject;
 
+import java.security.KeyPair;
+
 public class OrderlyV2ExamplesJava {
    public static void main(String[] args) throws Exception {
       OkHttpClient client = new OkHttpClient();
@@ -41,7 +43,10 @@ public class OrderlyV2ExamplesJava {
       }
       System.out.println("accountId: " + accountId);
 
-      String orderlyKey = register.addAccessKey();
+      KeyPair orderlyKey = register.addAccessKey();
       System.out.println("orderlyKey: " + orderlyKey);
+
+      Account account = new Account(client, accountId, orderlyKey);
+      account.getClientHolding();
    }
 }
