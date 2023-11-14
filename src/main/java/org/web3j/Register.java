@@ -15,17 +15,21 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class Register {
+
+   public final Config config;
+
    private OkHttpClient client;
    private Credentials credentials;
 
-   public Register(OkHttpClient client, Credentials credentials) {
+   public Register(Config config, OkHttpClient client, Credentials credentials) {
+      this.config = config;
       this.client = client;
       this.credentials = credentials;
    }
 
    public String registerAccount() throws IOException {
       Request nonceReq = new Request.Builder()
-            .url(Config.BASE_URL + "/v1/registration_nonce")
+            .url(config.baseUrl + "/v1/registration_nonce")
             .build();
 
       String nonceRes;
@@ -37,8 +41,8 @@ public class Register {
       String registrationNonce = nonceObj.getJSONObject("data").getString("registration_nonce");
 
       JSONObject registerMessage = new JSONObject();
-      registerMessage.put("brokerId", Config.BROKER_ID);
-      registerMessage.put("chainId", Config.CHAIN_ID);
+      registerMessage.put("brokerId", config.brokerId);
+      registerMessage.put("chainId", config.chainId);
       registerMessage.put("timestamp", Instant.now().toEpochMilli());
       registerMessage.put("registrationNonce", registrationNonce);
 
@@ -56,7 +60,7 @@ public class Register {
       jsonBody.put("userAddress", credentials.getAddress());
       RequestBody body = RequestBody.create(jsonBody.toString(), MediaType.get("application/json"));
       Request registerReq = new Request.Builder()
-            .url(Config.BASE_URL + "/v1/register_account")
+            .url(config.baseUrl + "/v1/register_account")
             .post(body)
             .build();
       String registerRes;
@@ -77,8 +81,8 @@ public class Register {
 
       JSONObject addKeyMessage = new JSONObject();
       long timestamp = Instant.now().toEpochMilli();
-      addKeyMessage.put("brokerId", Config.BROKER_ID);
-      addKeyMessage.put("chainId", Config.CHAIN_ID);
+      addKeyMessage.put("brokerId", config.brokerId);
+      addKeyMessage.put("chainId", config.chainId);
       addKeyMessage.put("scope", "read,trading");
       addKeyMessage.put("orderlyKey", orderlyKey);
       addKeyMessage.put("timestamp", timestamp);
@@ -99,7 +103,7 @@ public class Register {
       System.out.println(jsonBody.toString(2));
       RequestBody body = RequestBody.create(jsonBody.toString(), MediaType.get("application/json"));
       Request addKeyReq = new Request.Builder()
-            .url(Config.BASE_URL + "/v1/orderly_key")
+            .url(config.baseUrl + "/v1/orderly_key")
             .post(body)
             .build();
       String addKeyRes;
