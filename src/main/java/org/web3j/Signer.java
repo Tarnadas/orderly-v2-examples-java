@@ -94,6 +94,7 @@ public class Signer {
 
       long timestamp = Instant.now().toEpochMilli();
       String message = "" + timestamp + "POST" + url + json.toString();
+      System.out.println(message);
 
       EdDSAEngine signature = new EdDSAEngine();
       signature.initSign(keyPair.getPrivate());

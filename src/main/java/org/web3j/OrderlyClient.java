@@ -21,9 +21,10 @@ public class OrderlyClient {
 
    private String accountId;
 
-   private Register registerClient;
+   private Register register;
 
-   public final Order orderClient;
+   public final Order order;
+   public final PnL pnl;
 
    public OrderlyClient(Config config, OkHttpClient client, Credentials credentials) {
       this.config = config;
@@ -31,8 +32,9 @@ public class OrderlyClient {
       this.credentials = credentials;
       this.signer = new Signer(config, accountId);
 
-      this.registerClient = new Register(config, client, credentials);
-      this.orderClient = new Order(config, client, signer);
+      this.register = new Register(config, client, credentials);
+      this.order = new Order(config, client, signer);
+      this.pnl = new PnL(config, client, signer, credentials);
    }
 
    public OrderlyClient(Config config, OkHttpClient client, Credentials credentials,
@@ -44,8 +46,9 @@ public class OrderlyClient {
 
       this.accountId = accountId;
 
-      this.registerClient = new Register(config, client, credentials);
-      this.orderClient = new Order(config, client, signer);
+      this.register = new Register(config, client, credentials);
+      this.order = new Order(config, client, signer);
+      this.pnl = new PnL(config, client, signer, credentials);
    }
 
    public OrderlyClient(Config config, OkHttpClient client, Credentials credentials,
@@ -57,8 +60,9 @@ public class OrderlyClient {
 
       this.accountId = accountId;
 
-      this.registerClient = new Register(config, client, credentials);
-      this.orderClient = new Order(config, client, signer);
+      this.register = new Register(config, client, credentials);
+      this.order = new Order(config, client, signer);
+      this.pnl = new PnL(config, client, signer, credentials);
    }
 
    /**
@@ -80,12 +84,12 @@ public class OrderlyClient {
       JSONObject accountObj = new JSONObject(res);
       System.out.println("get_account response: " + accountObj);
 
-      registerClient = new Register(config, client, credentials);
+      register = new Register(config, client, credentials);
 
       if (accountObj.getBoolean("success")) {
          accountId = accountObj.getJSONObject("data").getString("account_id");
       } else {
-         accountId = registerClient.registerAccount();
+         accountId = register.registerAccount();
       }
       signer.setAccountId(accountId);
    }
@@ -100,7 +104,7 @@ public class OrderlyClient {
     */
    public void createNewAccessKey()
          throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
-      signer.setKeyPair(this.registerClient.addAccessKey());
+      signer.setKeyPair(this.register.addAccessKey());
    }
 
    /**

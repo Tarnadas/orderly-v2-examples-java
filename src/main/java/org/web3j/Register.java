@@ -100,7 +100,6 @@ public class Register {
       jsonBody.put("message", addKeyMessage);
       jsonBody.put("signature", Util.signatureToHashString(signature));
       jsonBody.put("userAddress", credentials.getAddress());
-      System.out.println(jsonBody.toString(2));
       RequestBody body = RequestBody.create(jsonBody.toString(), MediaType.get("application/json"));
       Request addKeyReq = new Request.Builder()
             .url(config.baseUrl + "/v1/orderly_key")
