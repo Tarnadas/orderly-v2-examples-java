@@ -1,20 +1,14 @@
 package org.web3j;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.*;
-import java.time.Instant;
-import java.util.Base64;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.web3j.crypto.*;
 
-import net.i2p.crypto.eddsa.EdDSAEngine;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class OrderlyClient {
@@ -24,7 +18,7 @@ public class OrderlyClient {
    private Credentials credentials;
 
    private String accountId;
-   private KeyPair keyPair;
+   private Signer signer;
 
    private Register registerClient;
 
@@ -36,7 +30,8 @@ public class OrderlyClient {
       this.registerClient = new Register(config, client, credentials);
    }
 
-   public OrderlyClient(Config config, OkHttpClient client, Credentials credentials, String accountId) {
+   public OrderlyClient(Config config, OkHttpClient client, Credentials credentials,
+         String accountId) {
       this.config = config;
       this.client = client;
       this.credentials = credentials;
@@ -46,24 +41,15 @@ public class OrderlyClient {
       this.registerClient = new Register(config, client, credentials);
    }
 
-   public OrderlyClient(Config config, OkHttpClient client, Credentials credentials, KeyPair keyPair) {
-      this.config = config;
-      this.client = client;
-      this.credentials = credentials;
-
-      this.keyPair = keyPair;
-
-      this.registerClient = new Register(config, client, credentials);
-   }
-
-   public OrderlyClient(Config config, OkHttpClient client, Credentials credentials, String accountId,
+   public OrderlyClient(Config config, OkHttpClient client, Credentials credentials,
+         String accountId,
          KeyPair keyPair) {
       this.config = config;
       this.client = client;
       this.credentials = credentials;
 
       this.accountId = accountId;
-      this.keyPair = keyPair;
+      this.signer = new Signer(config, accountId, keyPair);
 
       this.registerClient = new Register(config, client, credentials);
    }
@@ -107,25 +93,20 @@ public class OrderlyClient {
     */
    public void createNewAccessKey()
          throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
-      keyPair = this.registerClient.addAccessKey();
+      signer = new Signer(config, accountId, this.registerClient.addAccessKey());
    }
 
    /**
     * Get the current summary of user token holdings.
     * 
-    * @throws NoSuchAlgorithmException
+    * @throws OrderlyClientException
     * @throws InvalidKeyException
     * @throws SignatureException
     * @throws IOException
-    * @throws InvalidAlgorithmParameterException
-    * @throws OrderlyClientException
     */
    public JSONArray getClientHolding()
-         throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException,
-         InvalidAlgorithmParameterException, OrderlyClientException {
-      checkKeyPairPresent();
-
-      Request req = createSignedRequest("/v1/client/holding");
+         throws OrderlyClientException, InvalidKeyException, SignatureException, IOException {
+      Request req = signer.createSignedRequest("/v1/client/holding");
       String res;
       try (Response response = client.newCall(req).execute()) {
          res = response.body().string();
@@ -133,67 +114,5 @@ public class OrderlyClient {
       System.out.println("client holding response: " + res);
       JSONObject obj = new JSONObject(res);
       return obj.getJSONObject("data").getJSONArray("holding");
-   }
-
-   public Request createSignedRequest(String url)
-         throws SignatureException, UnsupportedEncodingException, InvalidKeyException {
-      return createSignedRequest(url, "GET", null);
-   }
-
-   public Request createSignedRequest(String url, String method, JSONObject json)
-         throws SignatureException, UnsupportedEncodingException, InvalidKeyException, IllegalArgumentException {
-      if (method == "GET") {
-         return createSignedGetRequest(url);
-      } else if (method == "POST") {
-         return createSignedPostRequest(url, json);
-      } else {
-         throw new IllegalArgumentException();
-      }
-   }
-
-   private void checkKeyPairPresent() throws OrderlyClientException {
-      if (keyPair == null) {
-         throw OrderlyClientExceptionReason.KEY_UNINITIALIZED.asException();
-      }
-   }
-
-   private Request createSignedGetRequest(String url)
-         throws SignatureException, UnsupportedEncodingException, InvalidKeyException {
-      long timestamp = Instant.now().toEpochMilli();
-      String message = "" + timestamp + "GET" + url;
-
-      EdDSAEngine signature = new EdDSAEngine();
-      signature.initSign(this.keyPair.getPrivate());
-      byte[] orderlySignature = signature.signOneShot(message.getBytes("UTF-8"));
-
-      return new Request.Builder()
-            .url(config.baseUrl + url)
-            .addHeader("orderly-timestamp", "" + timestamp)
-            .addHeader("orderly-account-id", this.accountId)
-            .addHeader("orderly-key", Util.encodePublicKey(keyPair))
-            .addHeader("orderly-signature", Base64.getUrlEncoder().encodeToString(orderlySignature))
-            .get()
-            .build();
-   }
-
-   private Request createSignedPostRequest(String url, JSONObject json)
-         throws SignatureException, UnsupportedEncodingException, InvalidKeyException {
-      RequestBody body = RequestBody.create(json.toString(), MediaType.parse("application/json"));
-
-      long timestamp = Instant.now().toEpochMilli();
-      String message = "" + timestamp + "POST" + url + json.toString();
-
-      EdDSAEngine signature = new EdDSAEngine();
-      signature.initSign(this.keyPair.getPrivate());
-      byte[] orderlySignature = signature.signOneShot(message.getBytes("UTF-8"));
-
-      return new Request.Builder()
-            .url(config.baseUrl + url)
-            .addHeader("orderly-timestamp", "" + timestamp)
-            .addHeader("orderly-account-id", this.accountId)
-            .addHeader("orderly-key", Util.encodePublicKey(keyPair))
-            .addHeader("orderly-signature", Base64.getUrlEncoder().encodeToString(orderlySignature))
-            .post(body)
-            .build();
    }
 }
