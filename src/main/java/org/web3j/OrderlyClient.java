@@ -6,6 +6,7 @@ import java.security.*;
 import java.time.Instant;
 import java.util.Base64;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.web3j.crypto.*;
 
@@ -119,7 +120,7 @@ public class OrderlyClient {
     * @throws InvalidAlgorithmParameterException
     * @throws OrderlyClientException
     */
-   public void getClientHolding()
+   public JSONArray getClientHolding()
          throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException,
          InvalidAlgorithmParameterException, OrderlyClientException {
       checkKeyPairPresent();
@@ -130,6 +131,8 @@ public class OrderlyClient {
          res = response.body().string();
       }
       System.out.println("client holding response: " + res);
+      JSONObject obj = new JSONObject(res);
+      return obj.getJSONObject("data").getJSONArray("holding");
    }
 
    public Request createSignedRequest(String url)
