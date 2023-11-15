@@ -14,20 +14,25 @@ import okhttp3.Response;
 public class OrderlyClient {
 
    public final Config config;
+
    private OkHttpClient client;
    private Credentials credentials;
-
-   private String accountId;
    private Signer signer;
 
+   private String accountId;
+
    private Register registerClient;
+
+   public final Order orderClient;
 
    public OrderlyClient(Config config, OkHttpClient client, Credentials credentials) {
       this.config = config;
       this.client = client;
       this.credentials = credentials;
+      this.signer = new Signer(config, accountId);
 
       this.registerClient = new Register(config, client, credentials);
+      this.orderClient = new Order(config, client, signer);
    }
 
    public OrderlyClient(Config config, OkHttpClient client, Credentials credentials,
@@ -35,23 +40,25 @@ public class OrderlyClient {
       this.config = config;
       this.client = client;
       this.credentials = credentials;
+      this.signer = new Signer(config, accountId);
 
       this.accountId = accountId;
 
       this.registerClient = new Register(config, client, credentials);
+      this.orderClient = new Order(config, client, signer);
    }
 
    public OrderlyClient(Config config, OkHttpClient client, Credentials credentials,
-         String accountId,
-         KeyPair keyPair) {
+         String accountId, KeyPair keyPair) {
       this.config = config;
       this.client = client;
       this.credentials = credentials;
-
-      this.accountId = accountId;
       this.signer = new Signer(config, accountId, keyPair);
 
+      this.accountId = accountId;
+
       this.registerClient = new Register(config, client, credentials);
+      this.orderClient = new Order(config, client, signer);
    }
 
    /**
@@ -80,7 +87,7 @@ public class OrderlyClient {
       } else {
          accountId = registerClient.registerAccount();
       }
-      System.out.println("accountId: " + accountId);
+      signer.setAccountId(accountId);
    }
 
    /**
@@ -93,7 +100,7 @@ public class OrderlyClient {
     */
    public void createNewAccessKey()
          throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
-      signer = new Signer(config, accountId, this.registerClient.addAccessKey());
+      signer.setKeyPair(this.registerClient.addAccessKey());
    }
 
    /**

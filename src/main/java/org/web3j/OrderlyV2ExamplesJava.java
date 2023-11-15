@@ -33,5 +33,10 @@ public class OrderlyV2ExamplesJava {
       if (!hasUSDC) {
          TestnetUtil.mintTestUSDC(new OkHttpClient(), client.config, credentials);
       }
+
+      JSONObject orders = client.orderClient.getOrders();
+      System.out.println("orders: " + orders);
+
+      client.orderClient.createOrder("PERP_ETH_USDC", "MARKET", 0.01, "BUY");
    }
 }
