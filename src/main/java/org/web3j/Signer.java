@@ -15,8 +15,8 @@ import okhttp3.RequestBody;
 public class Signer {
    public final Config config;
 
-   private String accountId;
-   private KeyPair keyPair;
+   public String accountId;
+   public KeyPair keyPair;
 
    public Signer(Config config) {
       this.config = config;
@@ -30,14 +30,6 @@ public class Signer {
    public Signer(Config config, String accountId, KeyPair keyPair) {
       this.config = config;
       this.accountId = accountId;
-      this.keyPair = keyPair;
-   }
-
-   public void setAccountId(String accountId) {
-      this.accountId = accountId;
-   }
-
-   public void setKeyPair(KeyPair keyPair) {
       this.keyPair = keyPair;
    }
 
@@ -94,7 +86,6 @@ public class Signer {
 
       long timestamp = Instant.now().toEpochMilli();
       String message = "" + timestamp + "POST" + url + json.toString();
-      System.out.println(message);
 
       EdDSAEngine signature = new EdDSAEngine();
       signature.initSign(keyPair.getPrivate());

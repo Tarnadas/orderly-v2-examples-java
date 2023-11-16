@@ -31,7 +31,7 @@ public abstract class Eip712 {
                {"name": "receiver", "type": "address"},
                {"name": "token", "type": "string"},
                {"name": "amount", "type": "uint256"},
-               {"name": "withdrawNonce", "type": "uint256"},
+               {"name": "withdrawNonce", "type": "uint64"},
                {"name": "timestamp", "type": "uint64"},
             ],
             "SettlePnl": [

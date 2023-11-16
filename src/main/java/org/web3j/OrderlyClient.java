@@ -3,7 +3,6 @@ package org.web3j;
 import java.io.IOException;
 import java.security.*;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.web3j.crypto.*;
 
@@ -23,6 +22,7 @@ public class OrderlyClient {
 
    private Register register;
 
+   public final Account account;
    public final Order order;
    public final PnL pnl;
 
@@ -33,6 +33,7 @@ public class OrderlyClient {
       this.signer = new Signer(config, accountId);
 
       this.register = new Register(config, client, credentials);
+      this.account = new Account(config, client, signer, credentials);
       this.order = new Order(config, client, signer);
       this.pnl = new PnL(config, client, signer, credentials);
    }
@@ -47,6 +48,7 @@ public class OrderlyClient {
       this.accountId = accountId;
 
       this.register = new Register(config, client, credentials);
+      this.account = new Account(config, client, signer, credentials);
       this.order = new Order(config, client, signer);
       this.pnl = new PnL(config, client, signer, credentials);
    }
@@ -61,8 +63,13 @@ public class OrderlyClient {
       this.accountId = accountId;
 
       this.register = new Register(config, client, credentials);
+      this.account = new Account(config, client, signer, credentials);
       this.order = new Order(config, client, signer);
       this.pnl = new PnL(config, client, signer, credentials);
+   }
+
+   public String getAccountId() {
+      return this.accountId;
    }
 
    /**
@@ -91,7 +98,7 @@ public class OrderlyClient {
       } else {
          accountId = register.registerAccount();
       }
-      signer.setAccountId(accountId);
+      signer.accountId = accountId;
    }
 
    /**
@@ -104,26 +111,6 @@ public class OrderlyClient {
     */
    public void createNewAccessKey()
          throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
-      signer.setKeyPair(this.register.addAccessKey());
-   }
-
-   /**
-    * Get the current summary of user token holdings.
-    * 
-    * @throws OrderlyClientException
-    * @throws InvalidKeyException
-    * @throws SignatureException
-    * @throws IOException
-    */
-   public JSONArray getClientHolding()
-         throws OrderlyClientException, InvalidKeyException, SignatureException, IOException {
-      Request req = signer.createSignedRequest("/v1/client/holding");
-      String res;
-      try (Response response = client.newCall(req).execute()) {
-         res = response.body().string();
-      }
-      System.out.println("client holding response: " + res);
-      JSONObject obj = new JSONObject(res);
-      return obj.getJSONObject("data").getJSONArray("holding");
+      signer.keyPair = this.register.addAccessKey();
    }
 }
