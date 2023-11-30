@@ -58,14 +58,19 @@ public class OrderlyV2ExamplesJava {
       Web3j web3j = Web3j.build(new HttpService("https://arbitrum-goerli.publicnode.com"));
       DefaultGasProvider gasProvider = new DefaultGasProvider();
 
-      NativeUSDC USDC = new NativeUSDC("0xfd064a18f3bf249cf1f87fc203e90d8f650f2d63", web3j, credentials, gasProvider);
+      String usdcAddress = "0xfd064a18f3bf249cf1f87fc203e90d8f650f2d63";
+      String vaultAddress = "0x0c554ddb6a9010ed1fd7e50d92559a06655da482";
+
+      NativeUSDC USDC = new NativeUSDC(usdcAddress, web3j, credentials, gasProvider);
       BigInteger balance = USDC.balanceOf(credentials.getAddress()).send();
       System.out.println("USDC balance: " + balance);
 
-      String vaultAddress = "0x0c554ddb6a9010ed1fd7e50d92559a06655da482";
-      Vault vault = new Vault(vaultAddress, web3j, credentials, gasProvider);
-
       BigInteger depositAmount = new BigInteger("100000");
+
+      // approve USDC ERC-20 to be transferred to Vault contract
+      USDC.approve(vaultAddress, depositAmount).send();
+
+      Vault vault = new Vault(vaultAddress, web3j, credentials, gasProvider);
 
       Keccak.Digest256 brokerHash = new Keccak.Digest256();
       byte[] brokerId = client.config.brokerId.getBytes("UTF-8");
@@ -75,14 +80,12 @@ public class OrderlyV2ExamplesJava {
       byte[] usdcBytes = "USDC".getBytes("UTF-8");
       tokenHash.update(usdcBytes, 0, usdcBytes.length);
 
-      // approve USDC ERC-20 to be transferred to Vault contract
-      USDC.approve(credentials.getAddress(), depositAmount).send();
-
       Vault.VaultDepositFE depositInput = new Vault.VaultDepositFE(
             Hex.decodeHex(client.getAccountId().substring(2)),
             brokerHash.digest(),
             tokenHash.digest(),
             depositAmount);
+
       // get wei deposit fee for `deposit` call
       BigInteger depositFee = vault.getDepositFee(vaultAddress, depositInput).send();
 
