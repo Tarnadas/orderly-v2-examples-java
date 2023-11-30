@@ -75,13 +75,20 @@ public class OrderlyV2ExamplesJava {
       byte[] usdcBytes = "USDC".getBytes("UTF-8");
       tokenHash.update(usdcBytes, 0, usdcBytes.length);
 
-      USDC.approve(vaultAddress, depositAmount).send();
+      // approve USDC ERC-20 to be transferred to Vault contract
+      USDC.approve(credentials.getAddress(), depositAmount).send();
+
+      Vault.VaultDepositFE depositInput = new Vault.VaultDepositFE(
+            Hex.decodeHex(client.getAccountId().substring(2)),
+            brokerHash.digest(),
+            tokenHash.digest(),
+            depositAmount);
+      // get wei deposit fee for `deposit` call
+      BigInteger depositFee = vault.getDepositFee(vaultAddress, depositInput).send();
+
+      // deposit USDC into Vault contract
       vault.deposit(
-            new Vault.VaultDepositFE(
-                  Hex.decodeHex(client.getAccountId().substring(2)),
-                  brokerHash.digest(),
-                  tokenHash.digest(),
-                  depositAmount),
-            depositAmount).send();
+            depositInput,
+            depositFee).send();
    }
 }
