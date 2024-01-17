@@ -1,12 +1,10 @@
 package org.web3j;
 
-import java.security.KeyPair;
-
 import org.bitcoinj.base.Base58;
 import org.web3j.crypto.Sign;
 import org.web3j.utils.Numeric;
 
-import net.i2p.crypto.eddsa.EdDSAPublicKey;
+import net.i2p.crypto.eddsa.EdDSAPrivateKey;
 
 public abstract class Util {
    public static String signatureToHashString(Sign.SignatureData signature) {
@@ -17,8 +15,7 @@ public abstract class Util {
       return Numeric.toHexString(retval);
    }
 
-   public static String encodePublicKey(KeyPair keyPair) {
-      EdDSAPublicKey pubKey = (EdDSAPublicKey) keyPair.getPublic();
-      return "ed25519:" + Base58.encode(pubKey.getAbyte());
+   public static String encodePublicKey(EdDSAPrivateKey privateKey) {
+      return "ed25519:" + Base58.encode(privateKey.getAbyte());
    }
 }

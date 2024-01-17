@@ -8,29 +8,30 @@ import java.util.Base64;
 import org.json.JSONObject;
 
 import net.i2p.crypto.eddsa.EdDSAEngine;
+import net.i2p.crypto.eddsa.EdDSAPrivateKey;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
 public class Signer {
-   public final Config config;
+   public final String baseUrl;
 
    public String accountId;
-   public KeyPair keyPair;
+   public EdDSAPrivateKey privateKey;
 
-   public Signer(Config config) {
-      this.config = config;
+   public Signer(String baseUrl) {
+      this.baseUrl = baseUrl;
    }
 
-   public Signer(Config config, String accountId) {
-      this.config = config;
+   public Signer(String baseUrl, String accountId) {
+      this.baseUrl = baseUrl;
       this.accountId = accountId;
    }
 
-   public Signer(Config config, String accountId, KeyPair keyPair) {
-      this.config = config;
+   public Signer(String baseUrl, String accountId, EdDSAPrivateKey privateKey) {
+      this.baseUrl = baseUrl;
       this.accountId = accountId;
-      this.keyPair = keyPair;
+      this.privateKey = privateKey;
    }
 
    public Request createSignedRequest(String url)
@@ -55,7 +56,7 @@ public class Signer {
       if (accountId == null) {
          throw OrderlyClientExceptionReason.ACCOUNT_UNINITIALIZED.asException();
       }
-      if (keyPair == null) {
+      if (privateKey == null) {
          throw OrderlyClientExceptionReason.KEYPAIR_UNINITIALIZED.asException();
       }
    }
@@ -66,15 +67,15 @@ public class Signer {
       String message = "" + timestamp + "GET" + url;
 
       EdDSAEngine signature = new EdDSAEngine();
-      signature.initSign(keyPair.getPrivate());
+      signature.initSign(privateKey);
       byte[] orderlySignature = signature.signOneShot(message.getBytes("UTF-8"));
 
       return new Request.Builder()
-            .url(config.baseUrl + url)
+            .url(baseUrl + url)
             .addHeader("Content-Type", "x-www-form-urlencoded")
             .addHeader("orderly-timestamp", "" + timestamp)
             .addHeader("orderly-account-id", accountId)
-            .addHeader("orderly-key", Util.encodePublicKey(keyPair))
+            .addHeader("orderly-key", Util.encodePublicKey(privateKey))
             .addHeader("orderly-signature", Base64.getUrlEncoder().encodeToString(orderlySignature))
             .get()
             .build();
@@ -88,15 +89,15 @@ public class Signer {
       String message = "" + timestamp + "POST" + url + json.toString();
 
       EdDSAEngine signature = new EdDSAEngine();
-      signature.initSign(keyPair.getPrivate());
+      signature.initSign(privateKey);
       byte[] orderlySignature = signature.signOneShot(message.getBytes("UTF-8"));
 
       return new Request.Builder()
-            .url(config.baseUrl + url)
+            .url(baseUrl + url)
             .addHeader("Content-Type", "application/json")
             .addHeader("orderly-timestamp", "" + timestamp)
             .addHeader("orderly-account-id", accountId)
-            .addHeader("orderly-key", Util.encodePublicKey(keyPair))
+            .addHeader("orderly-key", Util.encodePublicKey(privateKey))
             .addHeader("orderly-signature", Base64.getUrlEncoder().encodeToString(orderlySignature))
             .post(body)
             .build();

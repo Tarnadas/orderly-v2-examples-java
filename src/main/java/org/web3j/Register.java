@@ -7,6 +7,7 @@ import java.security.*;
 import org.json.JSONObject;
 import org.web3j.crypto.*;
 
+import net.i2p.crypto.eddsa.EdDSAPrivateKey;
 import net.i2p.crypto.eddsa.KeyPairGenerator;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -77,7 +78,7 @@ public class Register {
          throws IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
       KeyPairGenerator keyGen = new KeyPairGenerator();
       KeyPair keyPair = keyGen.generateKeyPair();
-      String orderlyKey = Util.encodePublicKey(keyPair);
+      String orderlyKey = Util.encodePublicKey((EdDSAPrivateKey) keyPair.getPrivate());
 
       JSONObject addKeyMessage = new JSONObject();
       long timestamp = Instant.now().toEpochMilli();

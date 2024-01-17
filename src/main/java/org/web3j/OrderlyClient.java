@@ -6,6 +6,7 @@ import java.security.*;
 import org.json.JSONObject;
 import org.web3j.crypto.*;
 
+import net.i2p.crypto.eddsa.EdDSAPrivateKey;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -30,7 +31,7 @@ public class OrderlyClient {
       this.config = config;
       this.client = client;
       this.credentials = credentials;
-      this.signer = new Signer(config, accountId);
+      this.signer = new Signer(config.baseUrl, accountId);
 
       this.register = new Register(config, client, credentials);
       this.account = new Account(config, client, signer, credentials);
@@ -43,7 +44,7 @@ public class OrderlyClient {
       this.config = config;
       this.client = client;
       this.credentials = credentials;
-      this.signer = new Signer(config, accountId);
+      this.signer = new Signer(config.baseUrl, accountId);
 
       this.accountId = accountId;
 
@@ -54,11 +55,11 @@ public class OrderlyClient {
    }
 
    public OrderlyClient(Config config, OkHttpClient client, Credentials credentials,
-         String accountId, KeyPair keyPair) {
+         String accountId, EdDSAPrivateKey privateKey) {
       this.config = config;
       this.client = client;
       this.credentials = credentials;
-      this.signer = new Signer(config, accountId, keyPair);
+      this.signer = new Signer(config.baseUrl, accountId, privateKey);
 
       this.accountId = accountId;
 
@@ -111,6 +112,6 @@ public class OrderlyClient {
     */
    public void createNewAccessKey()
          throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
-      signer.keyPair = this.register.addAccessKey();
+      signer.privateKey = ((EdDSAPrivateKey) this.register.addAccessKey().getPrivate());
    }
 }
